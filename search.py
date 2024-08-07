@@ -110,14 +110,16 @@ def main():
             if listarg[i] == "--include-filename":
                 is_flag = True
                 formatted_args[3] = True
+            if listarg[i] == "--help":
+                is_flag = True
             if not is_flag and listarg[i][:2] == "--":
                 clrprint("Skipping unknown flag", listarg[i], clr="y,b")
         
         if listarg[0] == "ECHO is on." or "--help" in arg:
-            clrprint("Usage:", "search", "<term>", "[--in-file <file>] [--in-cwd] [--include-filename]", clr="w,g,b,r")
+            clrprint("\nUsage:", "search", "<term>", "[--in-file <file>] [--in-cwd] [--include-filename]", clr="w,g,b,r")
             clrprint("Tool to search for a given term in a directory/file and return its line number.", clr="w")
             clrprint("Always searches in current directory", "recursively", "unless specified", clr="y,b,r,w",end=".\n\n")
-            clrprint("<term>\t\t\t",":", "Term you want to search for","(required)", clr="g,w,w,y")
+            clrprint("<term>\t\t\t",":", "Term you want to search for","(required)", clr="b,w,w,y")
             clrprint("--in-file <file>\t",":", "File that you want to search in.", clr="r,w,w")
             clrprint("--in-cwd\t\t",":", "Search without entering into sub-directories", clr="r,w,w")
             clrprint("--include-filename\t", ":", "Search includes file names", clr="r,w,w")
