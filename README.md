@@ -6,7 +6,12 @@ a bunch of scripts that i have
 
 # git-help.bat
 
-git help opens chrome in admin, which shows a blank screen. this script opens it in my default browser (sidekick)
+`git help` opens chrome in admin, which shows a blank screen. this script helps open it in my default browser (sidekick)
+
+# git+
+
+some commands i use shortened because i can<br>
+yeah no other reason lol
 
 # kill.bat
 
