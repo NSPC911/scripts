@@ -1,2 +1,2 @@
 @echo off
-python zipextractor.py
+python "%~dp0zipextractor.py"

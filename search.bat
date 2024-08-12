@@ -1,2 +1,2 @@
 @echo off
-echo %* | python search.py
+echo %* | python "%~dp0search.py"
