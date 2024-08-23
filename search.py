@@ -50,6 +50,8 @@ def search_in_cwd(term):
             found_smth()
 
 def search_in_file(file_path, term):
+    if file_path.split(os.path.sep)[-1] != formatted_args[5]:
+        return
     samefile = False
     last_printed_line = -1
     printed_line_numbers = []
@@ -113,7 +115,7 @@ def main():
                 listarg[index] += arg[i]
         listarg = list(filter(None, listarg))
         global formatted_args
-        formatted_args = ["<term>", "<file>", False, False, 0]
+        formatted_args = ["<term>", "<file>", False, False, 0, "*"]
         for i in range(len(listarg)):
             is_flag = False
             if i == 0:
@@ -149,6 +151,13 @@ def main():
                 except OverflowError:
                     clrprint("RangeError: `", listarg[i+1], "` is smaller than 0", clr="r,y,r")
                     exit(1)
+            if listarg[i] == "--file-name":
+                is_flag = True
+                try:
+                    formatted_args[5] = listarg[i+1]
+                except IndexError:
+                    clrprint("FlagError:", "Expected more after `--file-name` but received", "None", clr="r,y,r")
+                    exit(1)
             if not is_flag and listarg[i][:2] == "--":
                 clrprint("Skipping unknown flag", listarg[i], clr="y,b")
         
@@ -161,6 +170,7 @@ def main():
             clrprint("--in-cwd\t\t",":", "Search without entering into sub-directories.", clr="r,w,w")
             clrprint("--include-filename\t", ":", "Search includes file names.", clr="r,w,w")
             clrprint("--more-lines\t\t", ":", "Shows more lines based on your integer.", clr="r,w,w")
+            clrprint("--file-name\t\t", ":", "Searches only in the specified file name.", clr="r,w,w")
             exit(0)
         #exit(1)
         
@@ -169,7 +179,12 @@ def main():
         if formatted_args[1] != "<file>" and formatted_args[2] == True:
             clrprint("FlagError:", "Received", "`--in-file`", "and", "`--in-cwd`", "simultaneously", clr="r,y,p,y,p,y")
             exit(1)
-        
+        elif formatted_args[2] == True and formatted_args[5] != "*":
+            clrprint("FlagError:", "Received", "`--in-cwd`", "and", "`--file-name`", "simultaneously", clr="r,y,p,y,p,y")
+            exit(1)
+        elif formatted_args[1] != "<file>" and formatted_args[5] != "*":
+            clrprint("FlagError:", "Received", "`--in-file`", "and", "`--file-name`", "simultaneously", clr="r,y,p,y,p,y")
+            exit(1)
         print()
         
         if formatted_args[1] != "<file>":
