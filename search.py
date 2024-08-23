@@ -73,16 +73,20 @@ def search_in_file(file_path, term):
                 if i > last_printed_line:
                     if line_number - 1 == i and formatted_args[4] != 0:
                         line_marker = ">"
+                        clrs = ["b","g"]
                     else:
                         line_marker = " "
+                        if formatted_args[4] == 0:
+                            clrs = ["b","g"]
+                        else:
+                            clrs = ["p","r"]
                     if (term in lines[i] and i+1 < line_number) or i+1 in printed_line_numbers:
                         pass
                     elif line_number < i+1 and term in lines[i]:
                         break
                     else:
-                        clrprint(line_marker, i+1, "\t:", lines[i][:-1], clr="g,b,w,r")
+                        clrprint(line_marker, i+1, "\t:", lines[i][:-1], clr=f"g,{clrs[0]},w,{clrs[1]}")
                         printed_line_numbers.append(i+1)
-                        #print(printed_line_numbers)
 def main():
     try:
         arg = sys.stdin.read().strip()
