@@ -30,7 +30,7 @@ def search_dir(directory, term):
             print(f"\r{relative_file_path}", end="")
             if not is_binary(file_path):
                 search_in_file(file_path, term)
-            elif formatted_args[3] and term in str(relative_file_path):
+            elif formatted_args[2] and term in str(relative_file_path):
                 clear_line("-", "\n")
                 clrprint(f"\rFound", term, "in", os.path.relpath(file_path, start=os.getcwd()), clr="w,y,w,g")
                 samefile = True
@@ -43,19 +43,19 @@ def search_in_cwd(term):
         if os.path.isfile(item) and not is_binary(item):
             file_path = os.path.join(os.getcwd(), item)
             search_in_file(file_path, term)
-        elif is_binary(item) and formatted_args[3] and term in str(item):
+        elif is_binary(item) and formatted_args[2] and term in str(item):
             clear_line("-", "\n")
             clrprint(f"\rFound", term, "in", item, clr="w,y,w,g")
             samefile = True
             found_smth()
 
 def search_in_file(file_path, term):
-    if file_path.split(os.path.sep)[-1] != formatted_args[5]:
+    if file_path.split(os.path.sep)[-1] != formatted_args[4]:
         return
     samefile = False
     last_printed_line = -1
     printed_line_numbers = []
-    if formatted_args[3] and term in str(file_path):
+    if formatted_args[2] and term in str(file_path):
         clear_line("-", "\n")
         clrprint(f"\rFound", term, "in", os.path.relpath(file_path, start=os.getcwd()), clr="w,y,w,g")
         samefile = True
@@ -69,16 +69,16 @@ def search_in_file(file_path, term):
                 clrprint(f"\rFound", term, "in", os.path.relpath(file_path, start=os.getcwd()), clr="w,y,w,g")
                 samefile = True
                 found_smth()
-            start_line = max(0, line_number - 1 - formatted_args[4])
-            end_line = min(len(lines), line_number + formatted_args[4])
+            start_line = max(0, line_number - 1 - formatted_args[3])
+            end_line = min(len(lines), line_number + formatted_args[3])
             for i in range(start_line, end_line):
                 if i > last_printed_line:
-                    if line_number - 1 == i and formatted_args[4] != 0:
+                    if line_number - 1 == i and formatted_args[3] != 0:
                         line_marker = ">"
                         clrs = ["b","g"]
                     else:
                         line_marker = " "
-                        if formatted_args[4] == 0:
+                        if formatted_args[3] == 0:
                             clrs = ["b","g"]
                         else:
                             clrs = ["p","r"]
@@ -115,24 +115,17 @@ def main():
                 listarg[index] += arg[i]
         listarg = list(filter(None, listarg))
         global formatted_args
-        formatted_args = ["<term>", "<file>", False, False, 0, "*"]
+        formatted_args = ["<term>", False, False, 0, "*"]
         for i in range(len(listarg)):
             is_flag = False
             if i == 0:
                 formatted_args[0] = listarg[0].strip()
-            if listarg[i] == "--in-file":
-                is_flag = True
-                try:
-                    formatted_args[1] = listarg[i+1]
-                except IndexError:
-                    clrprint("FlagError:", "Expected more after `--in-file` but received", "None", clr="r,y,r")
-                    exit(1)
             if listarg[i] == "--in-cwd":
                 is_flag = True
-                formatted_args[2] = True
+                formatted_args[1] = True
             if listarg[i] == "--include-filename":
                 is_flag = True
-                formatted_args[3] = True
+                formatted_args[2] = True
             if listarg[i] == "--help":
                 is_flag = True
             if listarg[i] == "--more-lines":
@@ -141,7 +134,7 @@ def main():
                     if int(listarg[i+1]) < 0:
                         raise OverflowError
                     else:
-                        formatted_args[4] = int(listarg[i+1])
+                        formatted_args[3] = int(listarg[i+1])
                 except IndexError:
                     clrprint("FlagError:", "Expected more after `--more-lines` but received", "None", clr="r,y,r")
                     exit(1)
@@ -154,7 +147,7 @@ def main():
             if listarg[i] == "--file-name":
                 is_flag = True
                 try:
-                    formatted_args[5] = listarg[i+1]
+                    formatted_args[4] = listarg[i+1]
                 except IndexError:
                     clrprint("FlagError:", "Expected more after `--file-name` but received", "None", clr="r,y,r")
                     exit(1)
@@ -166,7 +159,6 @@ def main():
             clrprint("Tool to search for a given term in a directory/file and return its line number.", clr="w")
             clrprint("Always searches in current directory", "recursively", "unless specified", clr="y,b,r,w",end=".\n\n")
             clrprint("<term>\t\t\t",":", "Term you want to search for.","(required)", clr="b,w,w,y")
-            clrprint("--in-file <file>\t",":", "File that you want to search in.", clr="r,w,w")
             clrprint("--in-cwd\t\t",":", "Search without entering into sub-directories.", clr="r,w,w")
             clrprint("--include-filename\t", ":", "Search includes file names.", clr="r,w,w")
             clrprint("--more-lines\t\t", ":", "Shows more lines based on your integer.", clr="r,w,w")
@@ -176,31 +168,14 @@ def main():
         
         global found
         found = False
-        if formatted_args[1] != "<file>" and formatted_args[2] == True:
-            clrprint("FlagError:", "Received", "`--in-file`", "and", "`--in-cwd`", "simultaneously", clr="r,y,p,y,p,y")
-            exit(1)
-        elif formatted_args[2] == True and formatted_args[5] != "*":
-            clrprint("FlagError:", "Received", "`--in-cwd`", "and", "`--file-name`", "simultaneously", clr="r,y,p,y,p,y")
-            exit(1)
-        elif formatted_args[1] != "<file>" and formatted_args[5] != "*":
-            clrprint("FlagError:", "Received", "`--in-file`", "and", "`--file-name`", "simultaneously", clr="r,y,p,y,p,y")
-            exit(1)
         print()
         
-        if formatted_args[1] != "<file>":
-            clrprint("Searching for", listarg[0], "in", listarg[2], clr="w,b,w,y")
-        elif formatted_args[2] == True:
+        if formatted_args[1] == True:
             clrprint("Searching for", listarg[0], "in", os.getcwd(), clr="w,b,w,y")
         else:
             clrprint("Searching for", listarg[0], clr="w,b")
         
-        if formatted_args[1] != "<file>" and formatted_args[2] == False:
-            if os.path.isfile(formatted_args[1]):
-                search_in_file(formatted_args[1], formatted_args[0])
-            else:
-                clrprint("FileNotFoundError:", f"{os.getcwd()}{os.path.sep}{formatted_args[1]}", clr="r,b")
-                exit(1)
-        elif formatted_args[2] == True:
+        if formatted_args[1] == True:
             search_in_cwd(formatted_args[0])
         else:
             search_dir(os.getcwd(), formatted_args[0])
