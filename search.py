@@ -51,21 +51,38 @@ def search_in_cwd(term):
 
 def search_in_file(file_path, term):
     samefile = False
+    last_printed_line = -1
+    printed_line_numbers = []
     if formatted_args[3] and term in str(file_path):
         clear_line("-", "\n")
         clrprint(f"\rFound", term, "in", os.path.relpath(file_path, start=os.getcwd()), clr="w,y,w,g")
         samefile = True
         found_smth()
     with open(file_path, 'r', errors='ignore') as f:
-        for line_number, line in enumerate(f, start=1):
-            if term in str(line):
-                if not samefile:
-                    clear_line("-", "\n")
-                    clrprint(f"\rFound", term, "in", os.path.relpath(file_path, start=os.getcwd()), clr="w,y,w,g")
-                    samefile = True
-                    found_smth()
-                clrprint(line_number, "\t:", line[:-1], clr="b,w,r")
-
+        lines = f.readlines()
+    for line_number, line in enumerate(lines, start=1):
+        if term in line:
+            if not samefile:
+                clear_line("-", "\n")
+                clrprint(f"\rFound", term, "in", os.path.relpath(file_path, start=os.getcwd()), clr="w,y,w,g")
+                samefile = True
+                found_smth()
+            start_line = max(0, line_number - 1 - formatted_args[4])
+            end_line = min(len(lines), line_number + formatted_args[4])
+            for i in range(start_line, end_line):
+                if i > last_printed_line:
+                    if line_number - 1 == i and formatted_args[4] != 0:
+                        line_marker = ">"
+                    else:
+                        line_marker = " "
+                    if (term in lines[i] and i+1 < line_number) or i+1 in printed_line_numbers:
+                        pass
+                    elif line_number < i+1 and term in lines[i]:
+                        break
+                    else:
+                        clrprint(line_marker, i+1, "\t:", lines[i][:-1], clr="g,b,w,r")
+                        printed_line_numbers.append(i+1)
+                        #print(printed_line_numbers)
 def main():
     try:
         arg = sys.stdin.read().strip()
@@ -92,7 +109,7 @@ def main():
                 listarg[index] += arg[i]
         listarg = list(filter(None, listarg))
         global formatted_args
-        formatted_args = ["<term>", "<file>", False, False]
+        formatted_args = ["<term>", "<file>", False, False, 0]
         for i in range(len(listarg)):
             is_flag = False
             if i == 0:
@@ -112,17 +129,34 @@ def main():
                 formatted_args[3] = True
             if listarg[i] == "--help":
                 is_flag = True
+            if listarg[i] == "--more-lines":
+                is_flag = True
+                try:
+                    if int(listarg[i+1]) < 0:
+                        raise OverflowError
+                    else:
+                        formatted_args[4] = int(listarg[i+1])
+                except IndexError:
+                    clrprint("FlagError:", "Expected more after `--more-lines` but received", "None", clr="r,y,r")
+                    exit(1)
+                except ValueError:
+                    clrprint("ValueError: `", listarg[i+1], "` was not an integer", clr="r,y,r")
+                    exit(1)
+                except OverflowError:
+                    clrprint("RangeError: `", listarg[i+1], "` is smaller than 0", clr="r,y,r")
+                    exit(1)
             if not is_flag and listarg[i][:2] == "--":
                 clrprint("Skipping unknown flag", listarg[i], clr="y,b")
         
         if listarg[0] == "ECHO is on." or "--help" in arg:
-            clrprint("\nUsage:", "search", "<term>", "[--in-file <file>] [--in-cwd] [--include-filename]", clr="w,g,b,r")
+            clrprint("\nUsage:", "search", "<term>", "[--in-file <file>] [--in-cwd] [--include-filename] [--more-lines <int>]", clr="w,g,b,r")
             clrprint("Tool to search for a given term in a directory/file and return its line number.", clr="w")
             clrprint("Always searches in current directory", "recursively", "unless specified", clr="y,b,r,w",end=".\n\n")
-            clrprint("<term>\t\t\t",":", "Term you want to search for","(required)", clr="b,w,w,y")
+            clrprint("<term>\t\t\t",":", "Term you want to search for.","(required)", clr="b,w,w,y")
             clrprint("--in-file <file>\t",":", "File that you want to search in.", clr="r,w,w")
-            clrprint("--in-cwd\t\t",":", "Search without entering into sub-directories", clr="r,w,w")
-            clrprint("--include-filename\t", ":", "Search includes file names", clr="r,w,w")
+            clrprint("--in-cwd\t\t",":", "Search without entering into sub-directories.", clr="r,w,w")
+            clrprint("--include-filename\t", ":", "Search includes file names.", clr="r,w,w")
+            clrprint("--more-lines\t\t", ":", "Shows more lines based on your integer.", clr="r,w,w")
             exit(0)
         #exit(1)
         

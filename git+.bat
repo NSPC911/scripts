@@ -20,6 +20,14 @@ if "%1" == "squash" (
         git switch %2
         git pull %2
     )
+) else if "%1" == "push" (
+    if "%2" == "" (
+        echo No branch is specified to push to remote.
+    ) else (
+        git push --set-upstream origin %2
+    )
+) else if "%1" == "reset" (
+    git reset HEAD~ --hard
 ) else (
-    echo "git+.bat [squash/merge/switch] [abort/<branch>]"
+    echo "git+.bat [squash/merge/switch/push/reset] [abort/<branch>]"
 )
