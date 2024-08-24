@@ -50,7 +50,7 @@ def search_in_cwd(term):
             found_smth()
 
 def search_in_file(file_path, term):
-    if file_path.split(os.path.sep)[-1] != formatted_args[4]:
+    if file_path.split(os.path.sep)[-1] != formatted_args[4] and formatted_args[4] != "*":
         return
     samefile = False
     last_printed_line = -1
@@ -106,7 +106,7 @@ def main():
                 is_flag = True
                 index += 1
                 listarg.append(arg[i])
-            elif arg[i] == '"':
+            elif arg[i] == '`':
                 index += 1
                 listarg.append("")
             elif arg[i+1:i+3] == "--" and arg[i] == " ":
