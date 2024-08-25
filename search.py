@@ -2,7 +2,11 @@ import os
 import sys
 from clrprint import clrprint, clrinput
 from shutil import get_terminal_size as t_size
-import time
+#import time
+from colorama import Fore, Style, init
+import re
+# Initialize colorama
+init(autoreset=True)
 
 def found_smth():
     global found
@@ -32,7 +36,7 @@ def search_dir(directory, term):
                 search_in_file(file_path, term)
             elif formatted_args[2] and term in str(relative_file_path):
                 clear_line("-", "\n")
-                clrprint(f"\rFound", term, "in", os.path.relpath(file_path, start=os.getcwd()), clr="w,y,w,g")
+                print(f"\r{Fore.WHITE}Found {Fore.YELLOW}{term} {Fore.WHITE}in {Fore.GREEN}{os.path.relpath(file_path, start=os.getcwd())}")
                 samefile = True
                 found_smth()
 
@@ -45,7 +49,7 @@ def search_in_cwd(term):
             search_in_file(file_path, term)
         elif is_binary(item) and formatted_args[2] and term in str(item):
             clear_line("-", "\n")
-            clrprint(f"\rFound", term, "in", item, clr="w,y,w,g")
+            print(f"\r{Fore.WHITE}Found {Fore.YELLOW}{term} {Fore.WHITE}in {Fore.GREEN}{item}")
             samefile = True
             found_smth()
 
@@ -57,7 +61,7 @@ def search_in_file(file_path, term):
     printed_line_numbers = []
     if formatted_args[2] and term in str(file_path):
         clear_line("-", "\n")
-        clrprint(f"\rFound", term, "in", os.path.relpath(file_path, start=os.getcwd()), clr="w,y,w,g")
+        print(f"\r{Fore.WHITE}Found {Fore.YELLOW}{term} {Fore.WHITE}in {Fore.GREEN}{os.path.relpath(file_path, start=os.getcwd())}")
         samefile = True
         found_smth()
     with open(file_path, 'r', errors='ignore') as f:
@@ -66,29 +70,29 @@ def search_in_file(file_path, term):
         if term in line:
             if not samefile:
                 clear_line("-", "\n")
-                clrprint(f"\rFound", term, "in", os.path.relpath(file_path, start=os.getcwd()), clr="w,y,w,g")
+                print(f"\r{Fore.WHITE}Found {Fore.YELLOW}{term} {Fore.WHITE}in {Fore.GREEN}{os.path.relpath(file_path, start=os.getcwd())}")
                 samefile = True
                 found_smth()
             start_line = max(0, line_number - 1 - formatted_args[3])
             end_line = min(len(lines), line_number + formatted_args[3])
             for i in range(start_line, end_line):
                 if i > last_printed_line:
-                    if line_number - 1 == i and formatted_args[3] != 0:
+                    if line_number - 1 == i:
+                        # When line has term
                         line_marker = ">"
-                        clrs = ["b","g"]
+                        clrs = [Fore.CYAN, Fore.GREEN]
                     else:
+                        # When line doesn't have the term
                         line_marker = " "
-                        if formatted_args[3] == 0:
-                            clrs = ["b","g"]
-                        else:
-                            clrs = ["p","r"]
+                        clrs = [Fore.BLUE, Fore.RED]
                     if (term in lines[i] and i+1 < line_number) or i+1 in printed_line_numbers:
                         pass
                     elif line_number < i+1 and term in lines[i]:
                         break
                     else:
-                        clrprint(line_marker, i+1, "\t:", lines[i][:-1], clr=f"g,{clrs[0]},w,{clrs[1]}")
+                        print(f"{clrs[0]}{line_marker} {i+1}{Fore.WHITE}\t: {clrs[1]}{lines[i][:-1]}")
                         printed_line_numbers.append(i+1)
+
 def main():
     try:
         arg = sys.stdin.read().strip()
@@ -96,6 +100,12 @@ def main():
         index = 0
         wait_until = -1
         is_flag = False 
+        unicode_regex = r'\\u[0-9a-fA-F]{4}'
+        notunicode_regex = r'\\u(?![0-9a-fA-F]{4})'
+        if re.search(notunicode_regex, arg):
+            print(f"{Fore.RED}ValueError: Invalid Unicode Escape sequence found. Please fix it before trying again.")
+            exit(1)
+        arg = re.sub(unicode_regex, replace_unicode, arg)
         for i in range (len(arg)):
             if is_flag and arg[i] == " ":
                 is_flag = False
@@ -128,7 +138,7 @@ def main():
                 formatted_args[2] = True
             if listarg[i] == "--help":
                 is_flag = True
-            if listarg[i] == "--more-lines":
+            if listarg[i] == "--context":
                 is_flag = True
                 try:
                     if int(listarg[i+1]) < 0:
@@ -136,44 +146,43 @@ def main():
                     else:
                         formatted_args[3] = int(listarg[i+1])
                 except IndexError:
-                    clrprint("FlagError:", "Expected more after `--more-lines` but received", "None", clr="r,y,r")
+                    print(f"{Fore.RED}FlagError: Expected more after `--context` but received None")
                     exit(1)
                 except ValueError:
-                    clrprint("ValueError: `", listarg[i+1], "` was not an integer", clr="r,y,r")
+                    print(f"{Fore.RED}ValueError: `{listarg[i+1]}` was not an integer")
                     exit(1)
                 except OverflowError:
-                    clrprint("RangeError: `", listarg[i+1], "` is smaller than 0", clr="r,y,r")
+                    print(f"{Fore.RED}RangeError: `{listarg[i+1]}` is smaller than 0")
                     exit(1)
             if listarg[i] == "--file-name":
                 is_flag = True
                 try:
                     formatted_args[4] = listarg[i+1]
                 except IndexError:
-                    clrprint("FlagError:", "Expected more after `--file-name` but received", "None", clr="r,y,r")
+                    print(f"{Fore.RED}FlagError: Expected more after `--file-name` but received None")
                     exit(1)
             if not is_flag and listarg[i][:2] == "--":
-                clrprint("Skipping unknown flag", listarg[i], clr="y,b")
+                print(f"{Fore.YELLOW}Skipping unknown flag {Fore.BLUE}{listarg[i]}")
         
         if listarg[0] == "ECHO is on." or "--help" in arg:
-            clrprint("\nUsage:", "search", "<term>", "[--in-file <file>] [--in-cwd] [--include-filename] [--more-lines <int>]", clr="w,g,b,r")
-            clrprint("Tool to search for a given term in a directory/file and return its line number.", clr="w")
-            clrprint("Always searches in current directory", "recursively", "unless specified", clr="y,b,r,w",end=".\n\n")
-            clrprint("<term>\t\t\t",":", "Term you want to search for.","(required)", clr="b,w,w,y")
-            clrprint("--in-cwd\t\t",":", "Search without entering into sub-directories.", clr="r,w,w")
-            clrprint("--include-filename\t", ":", "Search includes file names.", clr="r,w,w")
-            clrprint("--more-lines\t\t", ":", "Shows more lines based on your integer.", clr="r,w,w")
-            clrprint("--file-name\t\t", ":", "Searches only in the specified file name.", clr="r,w,w")
+            print(f"\n{Fore.WHITE}Usage: search <term> [--in-file <file>] [--in-cwd] [--include-filename] [--context <int>]")
+            print(f"{Fore.GREEN}Tool to search for a given term in a directory/file and return its line number.")
+            print(f"{Fore.YELLOW}Always searches in current directory recursively unless specified{Fore.RESET}.")
+            print(f"{Fore.BLUE}<term>\t\t\t:{Fore.WHITE} Term you want to search for.{Fore.YELLOW} (required)")
+            print(f"{Fore.RED}--in-cwd\t\t:{Fore.WHITE} Search without entering into sub-directories.")
+            print(f"{Fore.RED}--include-filename\t:{Fore.WHITE} Search includes file names.")
+            print(f"{Fore.RED}--context\t\t:{Fore.WHITE} Shows more lines based on your integer.")
+            print(f"{Fore.RED}--file-name\t\t:{Fore.WHITE} Searches only in the specified file name.")
             exit(0)
-        #exit(1)
         
         global found
         found = False
         print()
         
         if formatted_args[1] == True:
-            clrprint("Searching for", listarg[0], "in", os.getcwd(), clr="w,b,w,y")
+            print(f"{Fore.WHITE}Searching for {Fore.BLUE}{listarg[0]} {Fore.WHITE}in {Fore.YELLOW}{os.getcwd()}")
         else:
-            clrprint("Searching for", listarg[0], clr="w,b")
+            print(f"{Fore.WHITE}Searching for {Fore.BLUE}{listarg[0]}")
         
         if formatted_args[1] == True:
             search_in_cwd(formatted_args[0])
@@ -181,7 +190,7 @@ def main():
             search_dir(os.getcwd(), formatted_args[0])
         if not found:
             clear_line()
-            clrprint("\nCouldn't find", formatted_args[0], clr="y,b")
+            print(f"\n{Fore.YELLOW}Couldn't find {Fore.BLUE}{formatted_args[0]}")
         else:
             clear_line("-")
             print()
