@@ -28,6 +28,7 @@ if "%1" == "squash" (
     )
 ) else if "%1" == "reset" (
     git reset HEAD~ --hard
+    git pull
 ) else (
     echo "git+.bat [squash/merge/switch/push/reset] [abort/<branch>]"
 )
