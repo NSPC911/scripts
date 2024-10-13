@@ -1,18 +1,5 @@
 @echo off
-if "%1" == "squash" (
-    if "%2" == "abort" (
-        git rebase --abort
-    ) else (
-        git rebase -i main
-    )
-) else if "%1" == "merge" (
-    if "%2" == "" (
-        echo No branch is specified to merge.
-    ) else (
-        git checkout main
-        git merge %2
-    )
-) else if "%1" == "switch" (
+if "%1" == "switch" (
     if "%2" == "" (
         echo No branch is specified to switch to.
     ) else (
@@ -29,6 +16,8 @@ if "%1" == "squash" (
 ) else if "%1" == "reset" (
     git reset HEAD~ --hard
     git pull
+) else if "%1" == "amend" (
+    git commit --amend --no-edit --allow-empty
 ) else (
-    echo "git+.bat [squash/merge/switch/push/reset] [abort/<branch>]"
+    echo "git+.bat [switch/push/reset/amend] [abort/<branch>]"
 )
