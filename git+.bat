@@ -19,5 +19,5 @@ if "%1" == "switch" (
 ) else if "%1" == "amend" (
     git commit --amend --no-edit --allow-empty
 ) else (
-    echo "git+.bat [switch/push/reset/amend] [abort/<branch>]"
+    echo "git+.bat [switch/push/reset/amend] [<branch>]"
 )
