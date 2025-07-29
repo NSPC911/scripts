@@ -14,6 +14,7 @@ if "%1" == "switch" (
         git push --set-upstream origin %2
     )
 ) else if "%1" == "reset" (
+    git clean -fd
     git reset HEAD~ --hard
     git pull
 ) else if "%1" == "amend" (
